@@ -7,24 +7,16 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
 var LeScanner = module.exports = function (option, callback) {
-
     console.log("temp lescan option:" + JSON.stringify(option));
-
-    //设置扫描距离
-    var mi = Number(option["mi"]);
-    //标记位
-    var flag = option["flag"];
     //扫描mac
-    var scanmac = option["scanmac"];
+    var scanmac = option["mac"];
     //起始时间
     var BeginTime = new Date().getTime();
-    var EndTime=new Date().getTime();
-    var result={};
+    var EndTime = new Date().getTime();
+    var result = {};
     var bluetoothHciSocket = new BluetoothHciSocket();
     //间隔参数：interval，window
     var parameter = option["parameter"];
-    //设备名称
-    const macName = option["macName"];
 
     bluetoothHciSocket.on('data', function (data) {
         console.log('data(hex): ' + data.toString('hex'));
@@ -59,20 +51,8 @@ var LeScanner = module.exports = function (option, callback) {
                     }
                     console.log('\t' + eir.toString('hex'));
                     console.log('ser\t' + rssi);
-                    console.log('time: ' + (new Date().getTime() - TempTime));
+                    console.log('time: ' + (new Date().getTime() - BeginTime));
                     var mac = gapAddr.toString('hex').match(/.{1,2}/g).reverse().join(':');
-                    var args =
-                    {
-                        "mac": mac,
-                        "name": macName[mac],
-                        "RSSI": rssi,
-                        "time": new Date().getTime(),
-                        "flag": flag,
-                        "mi": mi,
-                        "datetime": new Date()
-                    };
-                    dbtools.insertdb(args);
-                    //callback(args);
                     EndTime = new Date().getTime();
                     console.log('间隔时间:' + (new Date().getTime() - BeginTime));
                     //扫描到设备，返回结果
@@ -81,19 +61,19 @@ var LeScanner = module.exports = function (option, callback) {
                         result = {
                             "value": "succeed",
                             "LeScanBegintime": BeginTime,
-                            "LeScanEndtime": new Date().getTime()
+                            "LeScanEndtime": new Date().getTime(),
+                            "RSSI":rssi
                         };
                         callback(result);
-                    } else if (EndTime - BeginTime > 20000) {
+                    } else if (EndTime - BeginTime > 20000) {   //超时时间20s
                         bluetoothHciSocket.stop();
-                        result={
+                        result = {
                             "value": "time out",
                             "LeScanBegintime": BeginTime,
                             "LeScanEndtime": new Date().getTime()
                         }
                         callback(result);
                     }
-
                 }
             }
         }
@@ -102,7 +82,6 @@ var LeScanner = module.exports = function (option, callback) {
 
     bluetoothHciSocket.on('error', function (error) {
         // TODO: non-BLE adaptor
-
         if (error.message === 'Operation not permitted') {
             console.log('state = unauthorized');
         } else if (error.message === 'Network is down') {

@@ -1,6 +1,6 @@
 {
   "name": "andon-bluetooth-oncelescan-temp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Bluetooth HCI socket binding for Node.js",
   "main": "app.js",
   "scripts": {
